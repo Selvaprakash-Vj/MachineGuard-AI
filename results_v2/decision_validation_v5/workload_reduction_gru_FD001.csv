@@ -1,0 +1,8 @@
+metric,engine_count,percentage_of_fleet,average_absolute_error
+Mandatory reviews removed,13,13.0,10.384419954740084
+Mandatory reviews added,0,0.0,0.0
+Low-error mandatory reviews removed,7,7.000000000000001,5.7955507550920755
+High-error engines removed from mandatory review,1,1.0,22.454177856445312
+Dangerous overpredictions removed from mandatory review,4,4.0,13.219802856445312
+Severe overpredictions removed from mandatory review,0,0.0,0.0
+Required engines downgraded to Not required,0,0.0,0.0

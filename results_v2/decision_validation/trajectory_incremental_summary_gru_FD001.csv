@@ -1,0 +1,5 @@
+metric,engine_count,percentage_of_fleet,average_absolute_error
+Engines upgraded by V4,41,41.0,10.874644907509408
+New mandatory reviews,36,36.0,11.64748043484158
+Previously missed dangerous predictions now reviewed,3,3.0,24.793365478515625
+Previously missed high-error predictions now reviewed,2,2.0,30.697967529296875

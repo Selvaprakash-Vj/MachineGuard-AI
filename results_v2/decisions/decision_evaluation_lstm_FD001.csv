@@ -1,0 +1,4 @@
+decision_status,engine_count,average_actual_rul,average_absolute_error,actual_rul_below_20_rate,actual_rul_below_50_rate,dangerous_overprediction_rate
+Critical,24,19.708333333333332,4.265766402085622,0.6666666666666666,0.9583333333333334,0.0
+Engineering review,62,101.0,11.824427081692603,0.0,0.04838709677419355,0.3548387096774194
+Maintenance required,14,50.714285714285715,10.856408664158412,0.0,0.5,0.14285714285714285

@@ -1,0 +1,1 @@
+unit,actual_rul,predicted_rul_mean,predicted_rul_median,mc_standard_deviation,raw_percentile_05,raw_percentile_95,calibrated_lower_bound,calibrated_upper_bound,interval_width,prediction_error,absolute_error,confidence,health_status,recommendation,actual_inside_interval

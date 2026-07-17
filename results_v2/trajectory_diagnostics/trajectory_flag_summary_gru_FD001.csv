@@ -1,0 +1,8 @@
+trajectory_flag,engine_count,percentage,average_final_absolute_error
+Consistent degradation,41,41.0,8.735489484740466
+High-RUL plateau — review,30,30.0,10.841209665934246
+Unstable trajectory,18,18.0,12.636130438910591
+Rapid degradation signal,6,6.0,5.206474939982097
+Mixed trajectory,3,3.0,6.1789805094401045
+RUL increasing despite ageing,1,1.0,14.657440185546875
+Weak degradation / plateau,1,1.0,12.426406860351562

@@ -1,0 +1,5 @@
+metric,value
+Pearson reliability risk vs absolute error,0.2830355934692335
+Spearman reliability risk vs absolute error,0.3253765376537653
+Pearson reliability risk vs signed prediction error,-0.09295628270181011
+Spearman reliability risk vs signed prediction error,-0.08194419441944194

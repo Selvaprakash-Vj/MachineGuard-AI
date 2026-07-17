@@ -1,0 +1,6 @@
+model,engine_wins,percentage
+GRU,26,26.0
+Transformer,26,26.0
+LSTM,25,25.0
+Ridge,19,19.0
+Ensemble,4,4.0

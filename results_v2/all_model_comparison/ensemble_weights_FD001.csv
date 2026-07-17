@@ -1,0 +1,5 @@
+model,weight
+ridge,0.0
+lstm,0.45
+gru,0.5
+transformer,0.05
