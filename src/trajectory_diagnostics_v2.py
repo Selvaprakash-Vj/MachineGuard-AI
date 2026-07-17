@@ -1,5 +1,4 @@
 import argparse
-import os
 from pathlib import Path
 
 import joblib
@@ -13,11 +12,7 @@ DATA_DIR = Path("data")
 PROCESSED_DIR = DATA_DIR / "processed_v2"
 MODELS_DIR = Path("models_v2")
 RESULTS_DIR = Path("results_v2")
-
-TRAJECTORY_DIR = (
-    RESULTS_DIR
-    / "trajectory_diagnostics"
-)
+TRAJECTORY_DIR = RESULTS_DIR / "trajectory_diagnostics"
 
 TRAJECTORY_DIR.mkdir(
     parents=True,
@@ -51,17 +46,13 @@ def find_cmapss_file(
 
     for directory in directory_candidates:
         for filename in filename_candidates:
-            candidate_path = (
-                directory / filename
-            )
+            candidate_path = directory / filename
 
             if candidate_path.exists():
                 return candidate_path
 
     searched_paths = [
-        str(
-            directory / filename
-        )
+        str(directory / filename)
         for directory in directory_candidates
         for filename in filename_candidates
     ]
@@ -69,9 +60,7 @@ def find_cmapss_file(
     raise FileNotFoundError(
         f"Could not locate {file_prefix}_{dataset}.\n"
         "Searched:\n"
-        + "\n".join(
-            searched_paths
-        )
+        + "\n".join(searched_paths)
     )
 
 
@@ -80,10 +69,7 @@ def load_processed_metadata(
 ):
     """Load scaler, feature names and sequence configuration."""
 
-    processed_path = (
-        PROCESSED_DIR
-        / f"{dataset}.pkl"
-    )
+    processed_path = PROCESSED_DIR / f"{dataset}.pkl"
 
     if not processed_path.exists():
         raise FileNotFoundError(
@@ -91,9 +77,7 @@ def load_processed_metadata(
             f"{processed_path}"
         )
 
-    processed_data = joblib.load(
-        processed_path
-    )
+    processed_data = joblib.load(processed_path)
 
     required_keys = [
         "feature_names",
@@ -116,26 +100,16 @@ def load_processed_metadata(
 
     return {
         "feature_names": list(
-            processed_data[
-                "feature_names"
-            ]
+            processed_data["feature_names"]
         ),
-        "scaler": processed_data[
-            "scaler"
-        ],
+        "scaler": processed_data["scaler"],
         "window_size": int(
-            processed_data[
-                "window_size"
-            ]
+            processed_data["window_size"]
         ),
         "rul_cap": float(
-            processed_data[
-                "rul_cap"
-            ]
+            processed_data["rul_cap"]
         ),
-        "processed_path": (
-            processed_path
-        ),
+        "processed_path": processed_path,
     }
 
 
@@ -180,10 +154,8 @@ def read_test_data(
         engine="python",
     )
 
-    expected_columns = (
-        2 + len(
-            feature_names
-        )
+    expected_columns = 2 + len(
+        feature_names
     )
 
     if raw_df.shape[1] < expected_columns:
@@ -194,8 +166,7 @@ def read_test_data(
         )
 
     raw_df = raw_df.iloc[
-        :,
-        :expected_columns,
+        :, :expected_columns
     ].copy()
 
     raw_df.columns = [
@@ -204,21 +175,15 @@ def read_test_data(
         *feature_names,
     ]
 
-    raw_df[
-        "unit"
-    ] = raw_df[
+    raw_df["unit"] = raw_df[
         "unit"
     ].astype(int)
 
-    raw_df[
-        "cycle"
-    ] = raw_df[
+    raw_df["cycle"] = raw_df[
         "cycle"
     ].astype(int)
 
-    raw_df[
-        feature_names
-    ] = raw_df[
+    raw_df[feature_names] = raw_df[
         feature_names
     ].astype(float)
 
@@ -269,23 +234,17 @@ def load_final_rul_labels(
     )
 
     sorted_units = np.sort(
-        np.unique(
-            test_units
-        )
+        np.unique(test_units)
     )
 
-    if len(rul_values) < len(
-        sorted_units
-    ):
+    if len(rul_values) < len(sorted_units):
         raise ValueError(
             "The RUL file contains fewer labels than "
             "the number of test engines."
         )
 
     final_rul_map = {
-        int(unit): float(
-            rul_values[index]
-        )
+        int(unit): float(rul_values[index])
         for index, unit in enumerate(
             sorted_units
         )
@@ -309,15 +268,13 @@ def scale_test_features(
     ].copy()
 
     scaled_features = scaler.transform(
-        raw_df[
-            feature_names
-        ]
+        raw_df[feature_names]
     )
 
-    scaled_df[
-        feature_names
-    ] = scaled_features.astype(
-        np.float32
+    scaled_df[feature_names] = (
+        scaled_features.astype(
+            np.float32
+        )
     )
 
     return scaled_df
@@ -343,22 +300,17 @@ def build_edge_padded_window(
 
     if start_index >= 0:
         return feature_array[
-            start_index:
-            end_index + 1
+            start_index:end_index + 1
         ]
 
     available_window = feature_array[
         :end_index + 1
     ]
 
-    padding_length = (
-        -start_index
-    )
+    padding_length = -start_index
 
     padding = np.repeat(
-        feature_array[
-            0:1
-        ],
+        feature_array[0:1],
         repeats=padding_length,
         axis=0,
     )
@@ -405,9 +357,7 @@ def build_history_windows(
         )
 
         for end_index in range(
-            len(
-                engine_df
-            )
+            len(engine_df)
         ):
             window = build_edge_padded_window(
                 feature_array=feature_array,
@@ -415,19 +365,13 @@ def build_history_windows(
                 window_size=window_size,
             )
 
-            windows.append(
-                window
-            )
+            windows.append(window)
 
             metadata_rows.append(
                 {
-                    "unit": int(
-                        unit
-                    ),
+                    "unit": int(unit),
                     "cycle": int(
-                        cycles[
-                            end_index
-                        ]
+                        cycles[end_index]
                     ),
                     "observed_cycle_index": int(
                         end_index + 1
@@ -476,15 +420,11 @@ def add_actual_rul_trajectory(
     Add retrospective true-RUL trajectories.
 
     For a test engine:
-
-        earlier true RUL
-        = final supplied RUL
-        + cycles remaining until the last observation
+    earlier true RUL = final supplied RUL
+    + cycles remaining until the last observation.
     """
 
-    trajectory_df = (
-        trajectory_df.copy()
-    )
+    trajectory_df = trajectory_df.copy()
 
     if final_rul_map is None:
         trajectory_df[
@@ -505,26 +445,24 @@ def add_actual_rul_trajectory(
 
         return trajectory_df
 
-    actual_rul_values = []
+    trajectory_df[
+        "actual_rul"
+    ] = np.nan
 
     for unit, engine_df in trajectory_df.groupby(
         "unit",
         sort=False,
     ):
         maximum_cycle = int(
-            engine_df[
-                "cycle"
-            ].max()
+            engine_df["cycle"].max()
         )
 
-        final_rul = final_rul_map[
-            int(
-                unit
-            )
-        ]
+        raw_final_rul = float(
+            final_rul_map[int(unit)]
+        )
 
         engine_actual_rul = (
-            final_rul
+            raw_final_rul
             + maximum_cycle
             - engine_df[
                 "cycle"
@@ -533,23 +471,16 @@ def add_actual_rul_trajectory(
             )
         )
 
-        actual_rul_values.extend(
-            engine_actual_rul
-        )
-
-    trajectory_df[
-        "actual_rul"
-    ] = np.asarray(
-        actual_rul_values,
-        dtype=float,
-    )
+        trajectory_df.loc[
+            engine_df.index,
+            "actual_rul",
+        ] = engine_actual_rul
 
     trajectory_df[
         "actual_rul_capped"
-    ] = np.minimum(
-        trajectory_df[
-            "actual_rul"
-        ],
+    ] = np.clip(
+        trajectory_df["actual_rul"],
+        0.0,
         rul_cap,
     )
 
@@ -591,9 +522,7 @@ def calculate_linear_slope(
         dtype=float,
     )
 
-    if len(
-        predictions
-    ) < 2:
+    if len(predictions) < 2:
         return 0.0
 
     slope, _ = np.polyfit(
@@ -602,9 +531,7 @@ def calculate_linear_slope(
         deg=1,
     )
 
-    return float(
-        slope
-    )
+    return float(slope)
 
 
 def calculate_residual_std(
@@ -623,9 +550,7 @@ def calculate_residual_std(
         dtype=float,
     )
 
-    if len(
-        predictions
-    ) < 3:
+    if len(predictions) < 3:
         return 0.0
 
     slope, intercept = np.polyfit(
@@ -635,8 +560,7 @@ def calculate_residual_std(
     )
 
     fitted_predictions = (
-        slope
-        * cycles
+        slope * cycles
         + intercept
     )
 
@@ -646,9 +570,7 @@ def calculate_residual_std(
     )
 
     return float(
-        np.std(
-            residuals
-        )
+        np.std(residuals)
     )
 
 
@@ -701,9 +623,7 @@ def classify_trajectory(
         return "Consistent degradation"
 
     if (
-        abs(
-            recent_slope
-        ) < 0.25
+        abs(recent_slope) < 0.25
         and recent_range < 12
     ):
         return "Weak degradation / plateau"
@@ -763,9 +683,7 @@ def build_engine_summary(
             recent_predictions
         )
 
-        if len(
-            recent_differences
-        ) == 0:
+        if len(recent_differences) == 0:
             violation_rate = 0.0
             flat_step_rate = 1.0
             large_jump_count = 0
@@ -810,35 +728,24 @@ def build_engine_summary(
             predictions=recent_predictions,
         )
 
-        all_history_slope = (
-            calculate_linear_slope(
-                cycles=all_cycles,
-                predictions=all_predictions,
-            )
+        all_history_slope = calculate_linear_slope(
+            cycles=all_cycles,
+            predictions=all_predictions,
         )
 
-        recent_residual_std = (
-            calculate_residual_std(
-                cycles=recent_cycles,
-                predictions=recent_predictions,
-            )
+        recent_residual_std = calculate_residual_std(
+            cycles=recent_cycles,
+            predictions=recent_predictions,
         )
 
         recent_predicted_drop = float(
-            recent_predictions[
-                0
-            ]
-            - recent_predictions[
-                -1
-            ]
+            recent_predictions[0]
+            - recent_predictions[-1]
         )
 
         recent_expected_drop = float(
             max(
-                len(
-                    recent_predictions
-                )
-                - 1,
+                len(recent_predictions) - 1,
                 0,
             )
         )
@@ -853,57 +760,37 @@ def build_engine_summary(
             recent_decline_ratio = 0.0
 
         recent_range = float(
-            np.ptp(
-                recent_predictions
-            )
+            np.ptp(recent_predictions)
         )
 
         final_predicted_rul = float(
             engine_df[
                 "predicted_rul"
-            ].iloc[
-                -1
-            ]
+            ].iloc[-1]
         )
 
         trajectory_flag = classify_trajectory(
-            final_predicted_rul=(
-                final_predicted_rul
-            ),
+            final_predicted_rul=final_predicted_rul,
             recent_slope=recent_slope,
-            recent_predicted_drop=(
-                recent_predicted_drop
-            ),
+            recent_predicted_drop=recent_predicted_drop,
             recent_range=recent_range,
             violation_rate=violation_rate,
-            large_jump_count=(
-                large_jump_count
-            ),
-            residual_std=(
-                recent_residual_std
-            ),
+            large_jump_count=large_jump_count,
+            residual_std=recent_residual_std,
         )
 
         summary_row = {
-            "unit": int(
-                unit
-            ),
+            "unit": int(unit),
             "observed_cycles": int(
-                len(
-                    engine_df
-                )
+                len(engine_df)
             ),
             "recent_window_used": int(
-                len(
-                    recent_df
-                )
+                len(recent_df)
             ),
             "initial_predicted_rul": float(
                 engine_df[
                     "predicted_rul"
-                ].iloc[
-                    0
-                ]
+                ].iloc[0]
             ),
             "final_predicted_rul": (
                 final_predicted_rul
@@ -955,15 +842,32 @@ def build_engine_summary(
         }
 
         if engine_df[
-            "actual_rul"
+            "actual_rul_capped"
         ].notna().any():
-            final_actual_rul = float(
+            raw_final_actual_rul = float(
                 engine_df[
                     "actual_rul"
-                ].iloc[
-                    -1
-                ]
+                ].iloc[-1]
             )
+
+            final_actual_rul = float(
+                engine_df[
+                    "actual_rul_capped"
+                ].iloc[-1]
+            )
+
+            final_prediction_error = (
+                final_predicted_rul
+                - final_actual_rul
+            )
+
+            final_absolute_error = abs(
+                final_prediction_error
+            )
+
+            summary_row[
+                "raw_final_actual_rul"
+            ] = raw_final_actual_rul
 
             summary_row[
                 "final_actual_rul"
@@ -971,24 +875,11 @@ def build_engine_summary(
 
             summary_row[
                 "final_prediction_error"
-            ] = (
-                final_predicted_rul
-                - min(
-                    final_actual_rul,
-                    float(
-                        engine_df[
-                            "actual_rul_capped"
-                        ].max()
-                    ),
-                )
-            )
+            ] = final_prediction_error
 
             summary_row[
                 "final_absolute_error"
-            ] = abs(
-                final_predicted_rul
-                - final_actual_rul
-            )
+            ] = final_absolute_error
 
         summary_rows.append(
             summary_row
@@ -1032,9 +923,7 @@ def build_flag_summary(
         flag_summary_df[
             "engine_count"
         ]
-        / len(
-            engine_summary_df
-        )
+        / len(engine_summary_df)
         * 100
     )
 
@@ -1055,12 +944,10 @@ def build_flag_summary(
             .reset_index()
         )
 
-        flag_summary_df = (
-            flag_summary_df.merge(
-                error_summary,
-                on="trajectory_flag",
-                how="left",
-            )
+        flag_summary_df = flag_summary_df.merge(
+            error_summary,
+            on="trajectory_flag",
+            how="left",
         )
 
     return flag_summary_df
@@ -1076,10 +963,7 @@ def plot_engine_trajectory(
     """Plot one engine's predicted RUL across its full history."""
 
     engine_df = trajectory_df[
-        trajectory_df[
-            "unit"
-        ]
-        == unit
+        trajectory_df["unit"] == unit
     ].sort_values(
         by="cycle"
     )
@@ -1092,15 +976,12 @@ def plot_engine_trajectory(
     )
 
     plt.plot(
-        engine_df[
-            "cycle"
-        ],
-        engine_df[
-            "predicted_rul"
-        ],
+        engine_df["cycle"],
+        engine_df["predicted_rul"],
         linewidth=2.2,
         label=(
-            f"{model_name.upper()} predicted RUL"
+            f"{model_name.upper()} "
+            "predicted RUL"
         ),
     )
 
@@ -1108,9 +989,7 @@ def plot_engine_trajectory(
         "actual_rul_capped"
     ].notna().any():
         plt.plot(
-            engine_df[
-                "cycle"
-            ],
+            engine_df["cycle"],
             engine_df[
                 "actual_rul_capped"
             ],
@@ -1124,16 +1003,8 @@ def plot_engine_trajectory(
     )
 
     plt.axvspan(
-        recent_df[
-            "cycle"
-        ].iloc[
-            0
-        ],
-        recent_df[
-            "cycle"
-        ].iloc[
-            -1
-        ],
+        recent_df["cycle"].iloc[0],
+        recent_df["cycle"].iloc[-1],
         alpha=0.12,
         label=(
             f"Recent {len(recent_df)} cycles"
@@ -1185,14 +1056,12 @@ def plot_selected_final_predictions(
     model_name,
     dataset,
 ):
-    """Plot final predictions and actual RUL for selected engines."""
+    """Plot final predictions and capped actual RUL for selected engines."""
 
     plot_df = engine_summary_df[
         engine_summary_df[
             "unit"
-        ].isin(
-            selected_units
-        )
+        ].isin(selected_units)
     ].copy()
 
     if plot_df.empty:
@@ -1205,9 +1074,7 @@ def plot_selected_final_predictions(
     )
 
     positions = np.arange(
-        len(
-            plot_df
-        )
+        len(plot_df)
     )
 
     plt.figure(
@@ -1221,7 +1088,8 @@ def plot_selected_final_predictions(
         ],
         width=0.55,
         label=(
-            f"{model_name.upper()} final prediction"
+            f"{model_name.upper()} "
+            "final prediction"
         ),
     )
 
@@ -1236,7 +1104,7 @@ def plot_selected_final_predictions(
             ],
             marker="x",
             s=100,
-            label="Actual final RUL",
+            label="Actual capped final RUL",
         )
 
     plt.xticks(
@@ -1274,7 +1142,7 @@ def plot_selected_final_predictions(
     output_path = (
         TRAJECTORY_DIR
         / (
-            f"selected_final_predictions_"
+            "selected_final_predictions_"
             f"{model_name}_{dataset}.png"
         )
     )
@@ -1298,9 +1166,7 @@ def print_selected_engines(
     selected_df = engine_summary_df[
         engine_summary_df[
             "unit"
-        ].isin(
-            selected_units
-        )
+        ].isin(selected_units)
     ].copy()
 
     if selected_df.empty:
@@ -1316,7 +1182,9 @@ def print_selected_engines(
     ]
 
     optional_columns = [
+        "raw_final_actual_rul",
         "final_actual_rul",
+        "final_prediction_error",
         "final_absolute_error",
     ]
 
@@ -1379,10 +1247,7 @@ def run_trajectory_diagnostics(
         ],
     )
 
-    (
-        final_rul_map,
-        rul_path,
-    ) = load_final_rul_labels(
+    final_rul_map, rul_path = load_final_rul_labels(
         dataset=dataset,
         test_units=raw_df[
             "unit"
@@ -1394,15 +1259,10 @@ def run_trajectory_diagnostics(
         feature_names=metadata[
             "feature_names"
         ],
-        scaler=metadata[
-            "scaler"
-        ],
+        scaler=metadata["scaler"],
     )
 
-    (
-        X_history,
-        trajectory_df,
-    ) = build_history_windows(
+    X_history, trajectory_df = build_history_windows(
         scaled_df=scaled_df,
         feature_names=metadata[
             "feature_names"
@@ -1417,57 +1277,41 @@ def run_trajectory_diagnostics(
     )
 
     print(
-        f"Window shape:    "
+        "Window shape: "
         f"{X_history.shape[1:]}"
     )
 
-    predictions = (
-        generate_history_predictions(
-            model=model,
-            X_history=X_history,
-            rul_cap=metadata[
-                "rul_cap"
-            ],
-        )
+    predictions = generate_history_predictions(
+        model=model,
+        X_history=X_history,
+        rul_cap=metadata["rul_cap"],
     )
 
     trajectory_df[
         "predicted_rul"
     ] = predictions
 
-    trajectory_df = (
-        add_actual_rul_trajectory(
-            trajectory_df=trajectory_df,
-            final_rul_map=final_rul_map,
-            rul_cap=metadata[
-                "rul_cap"
-            ],
-        )
+    trajectory_df = add_actual_rul_trajectory(
+        trajectory_df=trajectory_df,
+        final_rul_map=final_rul_map,
+        rul_cap=metadata["rul_cap"],
     )
 
-    engine_summary_df = (
-        build_engine_summary(
-            trajectory_df=trajectory_df,
-            recent_window=recent_window,
-            increase_tolerance=(
-                increase_tolerance
-            ),
-            jump_threshold=(
-                jump_threshold
-            ),
-        )
+    engine_summary_df = build_engine_summary(
+        trajectory_df=trajectory_df,
+        recent_window=recent_window,
+        increase_tolerance=increase_tolerance,
+        jump_threshold=jump_threshold,
     )
 
-    flag_summary_df = (
-        build_flag_summary(
-            engine_summary_df
-        )
+    flag_summary_df = build_flag_summary(
+        engine_summary_df
     )
 
     trajectory_path = (
         TRAJECTORY_DIR
         / (
-            f"trajectory_predictions_"
+            "trajectory_predictions_"
             f"{model_name}_{dataset}.csv"
         )
     )
@@ -1475,7 +1319,7 @@ def run_trajectory_diagnostics(
     summary_path = (
         TRAJECTORY_DIR
         / (
-            f"trajectory_summary_"
+            "trajectory_summary_"
             f"{model_name}_{dataset}.csv"
         )
     )
@@ -1483,7 +1327,7 @@ def run_trajectory_diagnostics(
     flag_summary_path = (
         TRAJECTORY_DIR
         / (
-            f"trajectory_flag_summary_"
+            "trajectory_flag_summary_"
             f"{model_name}_{dataset}.csv"
         )
     )
@@ -1517,14 +1361,12 @@ def run_trajectory_diagnostics(
     trajectory_plot_paths = []
 
     for unit in selected_units:
-        plot_path = (
-            plot_engine_trajectory(
-                trajectory_df=trajectory_df,
-                unit=unit,
-                model_name=model_name,
-                dataset=dataset,
-                recent_window=recent_window,
-            )
+        plot_path = plot_engine_trajectory(
+            trajectory_df=trajectory_df,
+            unit=unit,
+            model_name=model_name,
+            dataset=dataset,
+            recent_window=recent_window,
         )
 
         if plot_path is not None:
@@ -1533,36 +1375,36 @@ def run_trajectory_diagnostics(
             )
 
     print(
-        f"Model:          {model_path}"
+        f"Model: {model_path}"
     )
 
     print(
-        f"Processed data: "
+        "Processed data: "
         f"{metadata['processed_path']}"
     )
 
     print(
-        f"Raw test data:  {test_path}"
+        f"Raw test data: {test_path}"
     )
 
     if rul_path is None:
         print(
-            "RUL labels:     Not found — "
+            "RUL labels: Not found — "
             "running diagnostics without actual RUL."
         )
 
     else:
         print(
-            f"RUL labels:     {rul_path}"
+            f"RUL labels: {rul_path}"
         )
 
     print(
-        f"Test engines:   "
+        "Test engines: "
         f"{engine_summary_df['unit'].nunique()}"
     )
 
     print(
-        f"Recent window:  {recent_window} cycles"
+        f"Recent window: {recent_window} cycles"
     )
 
     print(
@@ -1593,21 +1435,21 @@ def run_trajectory_diagnostics(
     )
 
     print(
-        f"Engine summary:    {summary_path}"
+        f"Engine summary: {summary_path}"
     )
 
     print(
-        f"Flag summary:      {flag_summary_path}"
+        f"Flag summary: {flag_summary_path}"
     )
 
     if selected_plot_path is not None:
         print(
-            f"Selected engines:  {selected_plot_path}"
+            f"Selected engines: {selected_plot_path}"
         )
 
     for plot_path in trajectory_plot_paths:
         print(
-            f"Trajectory plot:   {plot_path}"
+            f"Trajectory plot: {plot_path}"
         )
 
 
